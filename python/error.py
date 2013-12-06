@@ -24,7 +24,7 @@ date2 = datetime.date(2012, 1, 6)  # end date
 
 # for stock in stocks
 # get goog quotes from yahoo finance
-goog_quotes = quotes_historical_yahoo("GOOG", date1, date2)
+goog_quotes = quotes_historical_yahoo("YHOO", date1, date2)
 if len(goog_quotes) == 0:
     raise SystemExit
 
@@ -37,7 +37,6 @@ goog_volume = np.array([q[5] for q in goog_quotes])[1:]
 X = goog_dates[1:151]
 y = goog_close_v[1:151]
 
-x = [[i] for i in X] # for use with scipy regession and svm
 ###############################################################################
 # Generate sample data
 n_samples_train, end_test_index = 75, 150
@@ -50,6 +49,9 @@ n_samples_train, end_test_index = 75, 150
 # Split train and test data
 X_train, X_test = X[:n_samples_train], X[n_samples_train : end_test_index]
 y_train, y_test = y[:n_samples_train], y[n_samples_train : end_test_index]
+
+X_train_matrix = [[i] for i in X_train] # for use with scipy regession and svm
+X_test_matrix = [[i] for i in X_test] #convert X to matrix format incase it has multiple features per sample
 ##############################################################################
 # Compute train and test errors
 
@@ -68,26 +70,32 @@ print("RMSE linear extrapolation: "+str(linear_error))
 
 # Linear regression 
 clf = linear_model.LinearRegression()
-clf.fit(x,y)
+clf.fit(X_train_matrix, y_train)
 y_regression = clf.coef_ * X_test + clf.intercept_
 regression_error = rmse(y_regression, y_test)
 print("RMSE linear regression: "+str(regression_error))
 
 # SVM
-from sklearn import svm
-svm_model = svm.LinearSVC()
-svm_model.fit(x,y)
-y_svm = svm_model.predict(y_test)
-print(i for i in y_svm)
+# Fit regression model
+from sklearn.svm import SVR
+
+svm_model = SVR(kernel='rbf',C=1e3, tol=.001)
+#from sklearn import svm
+#svm_model = svm.SVR()
+svm_model.fit(X_train_matrix, y_train)
+y_svm = svm_model.predict(X_test_matrix)
+svm_error = rmse(y_svm, y_test)
+print("RMSE SVM regression: "+str(svm_error))
 
 ###############################################################################
 # Plot results functions
 
 pl.figure()
 pl.scatter(X, y, c="k", label="data")
-pl.plot(X_test, y_linear_predictions, c="g", label="linear predictions", linewidth=2)
-pl.plot(X_test, y_last_train_predictions, c="r", label="last training example", linewidth=2)
-pl.plot(X_test, y_regression, c="b", label="linear regression", linewidth=2)
+pl.plot(X_test, y_linear_predictions, c="g", label="linear error="+str(linear_error), linewidth=2)
+pl.plot(X_test, y_last_train_predictions, c="r", label="last training example="+str(last_train_error), linewidth=2)
+pl.plot(X_test, y_regression, c="b", label="linear regression="+str(regression_error), linewidth=2)
+pl.plot(X_test, y_svm , c="m", label="SVM error="+str(svm_error), linewidth=2)
 pl.xlabel("data")
 pl.ylabel("target")
 pl.title("Naive Model")

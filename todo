@@ -1,0 +1,2 @@
+Todo:
+ normalize all values around 0 to prevent accuracy loss via precision

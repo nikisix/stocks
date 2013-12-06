@@ -9,7 +9,7 @@ import datetime
 import numpy as np
 import pylab as pl
 import scipy
-from matplotlib.finance import quotes_historical_yahoo
+from matplotlib.finance import quotes_historical_yahoo_ochl
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
 import matplotlib.pyplot as plt
 def rmse(predictions, targets):
@@ -24,7 +24,7 @@ date2 = datetime.date(2012, 1, 6)  # end date
 
 # for stock in stocks
 # get goog quotes from yahoo finance
-goog_quotes = quotes_historical_yahoo("YHOO", date1, date2)
+goog_quotes = quotes_historical_yahoo_ochl("YHOO", date1, date2)
 if len(goog_quotes) == 0:
     raise SystemExit
 
@@ -37,14 +37,12 @@ goog_volume = np.array([q[5] for q in goog_quotes])[1:]
 X = goog_dates[1:151]
 y = goog_close_v[1:151]
 
+# normalize the data  x' = (x - mean) / sd
+X = (X - np.mean(X)) / np.std(X)
 ###############################################################################
 # Generate sample data
-n_samples_train, end_test_index = 75, 150
-#np.random.seed(0)
-#coef = np.random.randn(n_features)
-#coef[50:] = 0.0  # only the top 10 features are impacting the model
-#X = np.random.randn(n_samples_train + n_samples_test, n_features)
-#y = np.dot(X, coef)
+n_samples_train, end_test_index = 100, 150
+test_size = end_test_index - n_samples_train
 
 # Split train and test data
 X_train, X_test = X[:n_samples_train], X[n_samples_train : end_test_index]
@@ -57,7 +55,7 @@ X_test_matrix = [[i] for i in X_test] #convert X to matrix format incase it has 
 
 # Naive
 y_last_train = y_train[len(y_train)-1] #naively take the last y as our model
-y_last_train_predictions = [y_last_train] * n_samples_train
+y_last_train_predictions = [y_last_train] * test_size
 last_train_error = rmse(y_last_train_predictions, y_test)
 print("RMSE Naive: "+str(last_train_error))
 
@@ -79,9 +77,8 @@ print("RMSE linear regression: "+str(regression_error))
 # Fit regression model
 from sklearn.svm import SVR
 
-svm_model = SVR(kernel='rbf',C=1e3, tol=.001)
-#from sklearn import svm
-#svm_model = svm.SVR()
+#svm_model = SVR(kernel='rbf',C=1e3, tol=.001)
+svm_model = SVR(kernel='rbf',C=.1, degree=1, tol=.001)
 svm_model.fit(X_train_matrix, y_train)
 y_svm = svm_model.predict(X_test_matrix)
 svm_error = rmse(y_svm, y_test)

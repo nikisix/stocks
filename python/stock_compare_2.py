@@ -14,33 +14,37 @@ print(__doc__)
 # Downloading the data
 date1 = datetime.date(1995, 1, 1)  # start date
 date2 = datetime.date(2012, 1, 6)  # end date
-stocks = ["YHOO", "GOOG"]
-n_stocks = len(stocks)
-quotes = {} #empty dictionary
-dates = {}
-close_values = {}
-volumes = {}
 
-for stock in stocks:
-	#download quotes
-	quotes[stock] = quotes_historical_yahoo_ochl(stock, date1, date2)
-	if len(quotes[stock]) == 0:
-		raise SystemExit
-	#unpack dates, closes and volumes
-	dates[stock] = np.array([q[0] for q in quotes[stock]], dtype=int)
-	close_values[stock] = np.array([q[2] for q in quotes[stock]])
-	volumes = np.array([q[5] for q in quotes[stock]])[1:]
+# get goog quotes from yahoo finance
+goog_quotes = quotes_historical_yahoo_ochl("GOOG", date1, date2)
+if len(goog_quotes) == 0:
+    raise SystemExit
+
+# get yahoo quotes from yahoo finance
+yhoo_quotes = quotes_historical_yahoo_ochl("YHOO", date1, date2)
+if len(yhoo_quotes) == 0:
+    raise SystemExit
+
+# unpack goog quotes
+goog_dates = np.array([q[0] for q in goog_quotes], dtype=int)
+goog_close_v = np.array([q[2] for q in goog_quotes])
+goog_volume = np.array([q[5] for q in goog_quotes])[1:]
+
+# unpack yhoo quotes
+yhoo_dates = np.array([q[0] for q in yhoo_quotes], dtype=int)
+yhoo_close_v = np.array([q[2] for q in yhoo_quotes])
+yhoo_volume = np.array([q[5] for q in yhoo_quotes])[1:]
 
 ###################################################
 #Plotting
 
-fig, (ax0, ax1) = plt.subplots(nrows=n_stocks)
+fig, (ax0, ax1) = plt.subplots(nrows=2)
 
-ax0.plot(dates[stocks[0]][1:20], close_values[stocks[0]][1:20])
-ax0.set_title(stocks[0])
+ax0.plot(yhoo_dates[1:20], yhoo_close_v[1:20])
+ax0.set_title('yahoo')
 
-ax1.plot(dates[stocks[1]][1:20], close_values[stocks[1]][1:20])
-ax1.set_title(stocks[1])
+ax1.plot(goog_dates[1:20], goog_close_v[1:20])
+ax1.set_title('goog')
 
 # Hide the right and top spines
 ax1.spines['right'].set_visible(False)

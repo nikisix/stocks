@@ -1,2 +1,3 @@
 Todo:
  normalize all values around 0 to prevent accuracy loss via precision
+ standardize tabs across multiple workstations

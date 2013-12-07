@@ -9,7 +9,7 @@ import datetime
 import numpy as np
 import pylab as pl
 import scipy
-from matplotlib.finance import quotes_historical_yahoo_ochl
+from matplotlib.finance import quotes_historical_yahoo
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
 import matplotlib.pyplot as plt
 def rmse(predictions, targets):
@@ -24,7 +24,7 @@ date2 = datetime.date(2012, 1, 6)  # end date
 
 # for stock in stocks
 # get goog quotes from yahoo finance
-goog_quotes = quotes_historical_yahoo_ochl("YHOO", date1, date2)
+goog_quotes = quotes_historical_yahoo("YHOO", date1, date2)
 if len(goog_quotes) == 0:
     raise SystemExit
 
